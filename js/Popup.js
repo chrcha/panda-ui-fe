@@ -1,5 +1,108 @@
 (function ($) {
 
+var Popup = function(sender, content, parent) {
+
+    this.prefix = "pp_";
+    this.id = this.prefix + Math.floor(Math.random() * 100000);
+    this.$sender = ($(sender).length ? $(sender) : $(document));
+    this.contentClass = 'popupContent';
+    this.$content = ($("."+this.contentClass, content).length
+                        ? $("."+this.contentClass, content)
+                        : $("<div class="+this.contentClass+"></div>").html(content));
+    this.$parent = ($(parent).length ? $(parent) : $(document.body));
+    this.position = new PopupPosition(sender, content, parent);
+
+    this.dataAttributes = {
+        "settings" : "popup-settings"
+    };
+
+    this.bindingValues = {
+        "on" : "on"
+    }
+
+    this.typeValues = {
+        "obedient" : "obedient"
+    }
+
+    // Popup basic settings
+    this.binding = this.bindingValues.on;
+    this.type = this.typeValues.obedient;
+    this.withTimeout = false;
+    this.withBackground = false;
+    this.withFade = false;
+
+    // Get settings for popup
+    this.extractSettings = function() {
+
+        // Get settings through content element
+        var $settings = this.$content
+            .find("[data-"+this.dataAttributes.settings+"]")
+                .add(this.$content.filter("[data-"+this.dataAttributes.settings+"]"))
+            .eq(0);
+        var extractedSettings = $settings.data(this.dataAttributes.settings) || {};
+
+        // Priority of choices is: JS settings > $settings > default
+        this.id             = extractedSettings.id || this.id;
+        this.parent         = (extractedSettings.parentid ? $("#"+extractedSettings.parentid) : this.parent);
+        this.binding        = $.fn.popup.binding || extractedSettings.binding || this.binding;
+        this.type           = $.fn.popup.type || extractedSettings.type || this.type;
+        this.withTimeout    = $.fn.popup.withTimeout || extractedSettings.withTimeout || this.withTimeout;
+        this.withBackground = $.fn.popup.withBackground || extractedSettings.withBackground || this.withBackground;
+        this.withFade       = $.fn.popup.withFade || extractedSettings.withFade || this.withFade;
+
+        // Remove settings from content element
+        $settings.removeAttr("data-"+this.dataAttributes.settings);
+    }
+};
+
+var PopupPosition = function(sender, content, parent) {
+
+    this.$sender = $(sender) || $(document);
+    this.$content = $(content) || $("<div />");
+    this.$parent = $(parent) || $(document.body);
+
+    this.dataAttributes = {
+        "settings" : "popup-extra"
+    };
+
+    this.orientationValues = {
+        "user" : "user"
+    };
+
+    this.invertDockValues = {
+        "none" : "none"
+    };
+
+    // Position settings
+    this.orientation = this.orientationValues.user;
+    this.distance = 0;
+    this.alignOffset = 0;
+    this.invertDock = this.invertDockValues.none;
+
+    // Get settings for position
+    this.extractSettings = function() {
+
+        // Get positioning settings through content element
+        var $settings = this.$content
+            .find("[data-"+this.dataAttributes.settings+"]")
+            .add(this.$content.filter("[data-"+this.dataAttributes.settings+"]"))
+            .eq(0);
+
+        var extractedSettings = $settings.data(this.dataAttributes.settings) || {};
+
+        this.orientation    = $.fn.popup.position || extractedSettings.position || this.orientation;
+        this.distance       = $.fn.popup.distance || extractedSettings.distance || this.distance;
+        this.alignOffset    = $.fn.popup.alignOffset || extractedSettings.alignOffset || this.alignOffset;
+        this.invertDock     = $.fn.popup.invertDock || extractedSettings.invertDock || this.invertDock;
+
+        // Remove settings from content element
+        $settings.removeAttr("data-"+this.dataAttributes.settings);
+    }
+};
+
+
+
+
     // Method Logic for popups
     var methods = {
         init: function (settings, extra, callback) {
@@ -1029,5 +1132,6 @@
             alignVertically(systemPopup, switchMap[position], ++tries);
         }
     }
+
 
 })(jQuery);
